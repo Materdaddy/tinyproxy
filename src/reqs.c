@@ -385,7 +385,7 @@ BAD_REQUEST_ERROR:
                 goto fail;
         }
 #ifdef REVERSE_SUPPORT
-        if (config.reversepath_list != NULL) {
+        if (config.reverse_list != NULL) {
                 /*
                  * Rewrite the URL based on the reverse path.  After calling
                  * reverse_rewrite_url "url" can be freed since we either
@@ -958,7 +958,7 @@ static int process_server_headers (struct conn_s *connptr)
         int ret;
 
 #ifdef REVERSE_SUPPORT
-        struct reversepath *reverse = config.reversepath_list;
+        struct reverse_s *reverse = config.reverse_list;
 #endif
 
         /* Get the response line from the remote server. */
@@ -1063,7 +1063,7 @@ retry:
             hashmap_entry_by_key (hashofheaders, "location",
                                   (void **) &header) > 0) {
 
-                /* Look for a matching entry in the reversepath list */
+                /* Look for a matching entry in the reverse_s list */
                 while (reverse) {
                         if (strncasecmp (header,
                                          reverse->url, (len =

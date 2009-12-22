@@ -57,7 +57,7 @@ struct config_s {
         unsigned int add_xtinyproxy; /* boolean */
 #endif
 #ifdef REVERSE_SUPPORT
-        struct reversepath *reversepath_list;
+        struct reverse_s *reverse_list;
         unsigned int reverseonly;       /* boolean */
         unsigned int reversemagic;      /* boolean */
         char *reversebaseurl;

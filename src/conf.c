@@ -293,7 +293,7 @@ static void free_config (struct config_s *conf)
         safefree (conf->filter);
 #endif                          /* FILTER_ENABLE */
 #ifdef REVERSE_SUPPORT
-        free_reversepath_list(conf->reversepath_list);
+        free_reverse_list(conf->reverse_list);
         safefree (conf->reversebaseurl);
 #endif
 #ifdef UPSTREAM_SUPPORT
@@ -484,7 +484,7 @@ static void initialize_with_defaults (struct config_s *conf,
 #endif
 
 #ifdef REVERSE_SUPPORT
-        /* struct reversepath *reversepath_list; */
+        /* struct reverse_s *reverse_list; */
         conf->reverseonly = defaults->reverseonly;
         conf->reversemagic = defaults->reversemagic;
 
@@ -1031,11 +1031,11 @@ static HANDLE_FUNC (handle_reversepath)
                         safefree (arg1);
                         return -1;
                 }
-                reversepath_add (arg1, arg2, &conf->reversepath_list);
+                reversepath_add (arg1, arg2, &conf->reverse_list);
                 safefree (arg1);
                 safefree (arg2);
         } else {
-                reversepath_add (NULL, arg1, &conf->reversepath_list);
+                reversepath_add (NULL, arg1, &conf->reverse_list);
                 safefree (arg1);
         }
         return 0;

@@ -28,12 +28,12 @@
 #include "conf.h"
 
 /*
- * Add entry to the reversepath list
+ * Add entry to the reverse_s list
  */
 void reversepath_add (const char *path, const char *url,
-                      struct reversepath **reversepath_list)
+                      struct reverse_s **reverse_list)
 {
-        struct reversepath *reverse;
+        struct reverse_s *reverse;
 
         if (url == NULL) {
                 log_message (LOG_WARNING,
@@ -55,8 +55,7 @@ void reversepath_add (const char *path, const char *url,
                 return;
         }
 
-        reverse = (struct reversepath *) safemalloc (sizeof
-                                                     (struct reversepath));
+        reverse = (struct reverse_s *) safemalloc (sizeof (struct reverse_s));
         if (!reverse) {
                 log_message (LOG_ERR,
                              "Unable to allocate memory in reversepath_add()");
@@ -70,8 +69,8 @@ void reversepath_add (const char *path, const char *url,
 
         reverse->url = safestrdup (url);
 
-        reverse->next = *reversepath_list;
-        *reversepath_list = reverse;
+        reverse->next = *reverse_list;
+        *reverse_list = reverse;
 
         log_message (LOG_INFO,
                      "Added reverse proxy rule: %s -> %s", reverse->path,
@@ -79,9 +78,9 @@ void reversepath_add (const char *path, const char *url,
 }
 
 /*
- * Check if a request url is in the reversepath list
+ * Check if a request url is in the reverse_s list
  */
-struct reversepath *reversepath_get (char *url, struct reversepath *reverse)
+struct reverse_s *reversepath_get (char *url, struct reverse_s *reverse)
 {
         while (reverse) {
                 if (strstr (url, reverse->path) == url)
@@ -94,13 +93,13 @@ struct reversepath *reversepath_get (char *url, struct reversepath *reverse)
 }
 
 /**
- * Free a reversepath list
+ * Free a reverse_s list
  */
 
-void free_reversepath_list (struct reversepath *reverse)
+void free_reverse_list (struct reverse_s *reverse)
 {
         while (reverse) {
-                struct reversepath *tmp = reverse;
+                struct reverse_s *tmp = reverse;
                 reverse = reverse->next;
                 safefree (tmp->url);
                 safefree (tmp->path);
@@ -117,12 +116,12 @@ char *reverse_rewrite_url (struct conn_s *connptr, hashmap_t hashofheaders,
         char *rewrite_url = NULL;
         char *cookie = NULL;
         char *cookieval;
-        struct reversepath *reverse = NULL;
+        struct reverse_s *reverse = NULL;
 
         /* Reverse requests always start with a slash */
         if (*url == '/') {
                 /* First try locating the reverse mapping by request url */
-                reverse = reversepath_get (url, config.reversepath_list);
+                reverse = reversepath_get (url, config.reverse_list);
                 if (reverse) {
                         rewrite_url = (char *)
                             safemalloc (strlen (url) + strlen (reverse->url) +
@@ -139,7 +138,7 @@ char *reverse_rewrite_url (struct conn_s *connptr, hashmap_t hashofheaders,
                             && (reverse =
                                 reversepath_get (cookieval +
                                                  strlen (REVERSE_COOKIE) + 1,
-                                                 config.reversepath_list)))
+                                                 config.reverse_list)))
                         {
 
                                 rewrite_url = (char *) safemalloc

@@ -23,19 +23,19 @@
 
 #include "conns.h"
 
-struct reversepath {
-        struct reversepath *next;
+typedef struct reverse_s {
+        struct reverse_s *next;
         char *path;
         char *url;
-};
+} reverse_t;
 
 #define REVERSE_COOKIE "yummy_magical_cookie"
 
 extern void reversepath_add (const char *path, const char *url,
-                             struct reversepath **reversepath_list);
-extern struct reversepath *reversepath_get (char *url,
-                                            struct reversepath *reverse);
-void free_reversepath_list (struct reversepath *reverse);
+                             struct reverse_s **reverse_list);
+extern struct reverse_s *reversepath_get (char *url,
+                                            struct reverse_s *reverse);
+void free_reverse_list (struct reverse_s *reverse);
 extern char *reverse_rewrite_url (struct conn_s *connptr,
                                   hashmap_t hashofheaders, char *url);
 
