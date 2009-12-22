@@ -317,6 +317,20 @@ Anonymous "Cookie"
 ReversePath "/example/" "http://www.example.com/"
 ----
 
+*ReverseHost*::
+
+    Configure one or more ReverseHost directives to enable reverse proxy
+    support based on hostname. With hostname based reverse proxying it is
+    possible to use the reverse proxy similar to apache's VirtualHosts,
+    with the document roots on different webservers.
+
+    If you uncomment the following example directives and run Tinyproxy
+    where DNS resolves the same hostnames, you can access example.com,
+    using http://example.yourdomain.com/ or http://anotherexample.com.
+
+    ReverseHost "example.yourdomain.com" "http://www.example.com/"
+    ReverseHost "anotherexample.com" "http://www.example.com/"
+
 *ReverseOnly*::
 
     When using Tinyproxy as a reverse proxy, it is STRONGLY
