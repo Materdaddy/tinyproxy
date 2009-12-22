@@ -146,6 +146,7 @@ static HANDLE_FUNC (handle_reversebaseurl);
 static HANDLE_FUNC (handle_reversemagic);
 static HANDLE_FUNC (handle_reverseonly);
 static HANDLE_FUNC (handle_reversepath);
+static HANDLE_FUNC (handle_reversehost);
 #endif
 static HANDLE_FUNC (handle_startservers);
 static HANDLE_FUNC (handle_statfile);
@@ -247,6 +248,7 @@ struct {
         STDCONF ("reverseonly", BOOL, handle_reverseonly),
         STDCONF ("reversemagic", BOOL, handle_reversemagic),
         STDCONF ("reversepath", STR "(" WS STR ")?", handle_reversepath),
+        STDCONF ("reversehost", STR WS STR, handle_reversehost),
 #endif
 #ifdef UPSTREAM_SUPPORT
         /* upstream is rather complicated */
@@ -1038,6 +1040,26 @@ static HANDLE_FUNC (handle_reversepath)
                 reversepath_add (NULL, arg1, &conf->reverse_list);
                 safefree (arg1);
         }
+        return 0;
+}
+
+static HANDLE_FUNC (handle_reversehost)
+{
+        char *arg1, *arg2;
+
+        arg1 = get_string_arg (line, &match[2]);
+        if (!arg1)
+                return -1;
+
+        arg2 = get_string_arg (line, &match[3]);
+        if (!arg2) {
+                safefree (arg1);
+                return -1;
+        }
+        reversehost_add (arg1, arg2, &conf->reverse_list);
+        safefree (arg1);
+        safefree (arg2);
+
         return 0;
 }
 #endif
