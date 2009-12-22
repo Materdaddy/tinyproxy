@@ -80,6 +80,7 @@ struct conn_s {
          * Place to store the current per-connection reverse proxy path
          */
         char *reversepath;
+        char *reversehost;
 #endif
 
         /*

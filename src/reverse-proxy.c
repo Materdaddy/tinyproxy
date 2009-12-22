@@ -61,6 +61,7 @@ void reversepath_add (const char *path, const char *url,
                              "Unable to allocate memory in reversepath_add()");
                 return;
         }
+        reverse->host = NULL;
 
         if (!path)
                 reverse->path = safestrdup ("/");
@@ -77,13 +78,76 @@ void reversepath_add (const char *path, const char *url,
                      reverse->url);
 }
 
+void reversehost_add (const char *host, const char *url,
+					  struct reverse_s **reverse_list)
+{
+        struct reverse_s *reverse;
+
+        if (url == NULL) {
+                log_message (LOG_WARNING,
+                             "Illegal reverse proxy rule: missing url");
+                return;
+        }
+
+        if (!strstr (url, "://")) {
+                log_message (LOG_WARNING,
+                             "Skipping reverse proxy rule: '%s' is not a valid url",
+                             url);
+                return;
+        }
+
+        if (!host) {
+                log_message (LOG_WARNING,
+                             "Skipping reverse proxy rule: host '%s' "
+                             "Host doesn't exist!", host);
+                return;
+        }
+
+        reverse = (struct reverse_s *) safemalloc (sizeof (struct reverse_s));
+        if (!reverse) {
+                log_message (LOG_ERR,
+                             "Unable to allocate memory in reversepath_add()");
+                return;
+        }
+        reverse->path = NULL;
+
+        if (!host)
+                reverse->host = safestrdup ("/");
+        else
+                reverse->host = safestrdup (host);
+
+        reverse->url = safestrdup (url);
+
+        reverse->next = *reverse_list;
+        *reverse_list = reverse;
+
+        log_message (LOG_INFO,
+                     "Added reverse proxy rule: %s -> %s", reverse->host,
+                     reverse->url);
+}
+
 /*
  * Check if a request url is in the reverse_s list
  */
 struct reverse_s *reversepath_get (char *url, struct reverse_s *reverse)
 {
         while (reverse) {
-                if (strstr (url, reverse->path) == url)
+                if (reverse->path && strstr (url, reverse->path) == url)
+                        return reverse;
+
+                reverse = reverse->next;
+        }
+
+        return NULL;
+}
+
+/*
+ * Check if a hostname is in the reverse_s list
+ */
+struct reverse_s *reversehost_get (char *host, struct reverse_s *reverse)
+{
+        while (reverse) {
+                if (reverse->host && strstr (host, reverse->host) == host)
                         return reverse;
 
                 reverse = reverse->next;
@@ -115,19 +179,29 @@ char *reverse_rewrite_url (struct conn_s *connptr, hashmap_t hashofheaders,
 {
         char *rewrite_url = NULL;
         char *cookie = NULL;
+        char *host = NULL;
         char *cookieval;
         struct reverse_s *reverse = NULL;
 
         /* Reverse requests always start with a slash */
         if (*url == '/') {
-                /* First try locating the reverse mapping by request url */
-                reverse = reversepath_get (url, config.reverse_list);
+                /* First try locating the reverse mapping by request host */
+                if (hashmap_entry_by_key (hashofheaders, "host",
+                                          (void **) &host) > 0)
+                        reverse = reversehost_get (host, config.reverse_list);
+                /* Next try locating the reverse mapping by request url */
+                if (!reverse)
+                        reverse = reversepath_get (url, config.reverse_list);
                 if (reverse) {
                         rewrite_url = (char *)
                             safemalloc (strlen (url) + strlen (reverse->url) +
                                         1);
                         strcpy (rewrite_url, reverse->url);
-                        strcat (rewrite_url, url + strlen (reverse->path));
+                        if (reverse->path && strlen (reverse->path) > 0)
+                                strcat (rewrite_url,
+                                        url + strlen (reverse->path));
+                        else
+                                strcat (rewrite_url, url + 1);
                 } else if (config.reversemagic
                            && hashmap_entry_by_key (hashofheaders,
                                                     "cookie",
@@ -168,8 +242,12 @@ char *reverse_rewrite_url (struct conn_s *connptr, hashmap_t hashofheaders,
         log_message (LOG_CONN, "Rewriting URL: %s -> %s", url, rewrite_url);
 
         /* Store reverse path so that the magical tracking cookie can be set */
-        if (config.reversemagic && reverse)
-                connptr->reversepath = safestrdup (reverse->path);
+        if (config.reversemagic && reverse) {
+                if (reverse->path)
+                        connptr->reversepath = safestrdup (reverse->path);
+                if (reverse->host)
+                        connptr->reversehost = safestrdup (reverse->host);
+        }
 
         return rewrite_url;
 }

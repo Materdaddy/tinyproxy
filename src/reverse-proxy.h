@@ -26,6 +26,7 @@
 typedef struct reverse_s {
         struct reverse_s *next;
         char *path;
+        char *host;
         char *url;
 } reverse_t;
 
@@ -33,7 +34,11 @@ typedef struct reverse_s {
 
 extern void reversepath_add (const char *path, const char *url,
                              struct reverse_s **reverse_list);
+extern void reversehost_add (const char *path, const char *url,
+                             struct reverse_s **reverse_list);
 extern struct reverse_s *reversepath_get (char *url,
+                                            struct reverse_s *reverse);
+extern struct reverse_s *reversehost_get (char *host,
                                             struct reverse_s *reverse);
 void free_reverse_list (struct reverse_s *reverse);
 extern char *reverse_rewrite_url (struct conn_s *connptr,
